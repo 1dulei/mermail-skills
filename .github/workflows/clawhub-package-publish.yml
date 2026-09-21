@@ -29,6 +29,8 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      already_published: ${{ steps.existing-publication.outputs.already_published }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -59,6 +61,39 @@ jobs:
       - name: Validate ClawHub package metadata
         run: clawhub package validate . --json > /dev/null
 
+      - name: Verify an existing exact publication
+        id: existing-publication
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+        env:
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          if ! clawhub package inspect mermail-skills --version "$VERSION" --json > "$RUNNER_TEMP/existing-package.json"; then
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          result = json.loads((Path(os.environ["RUNNER_TEMP"]) / "existing-package.json").read_text())
+          package = result.get("package") or {}
+          version = result.get("version") or {}
+          verification = version.get("verification") or {}
+          expected_version = json.loads(Path("package.json").read_text())["version"]
+          exact = (
+              version.get("version") == expected_version
+              and verification.get("sourceCommit") == os.environ["EXPECTED_COMMIT"]
+              and verification.get("scanStatus") == "clean"
+              and package.get("scanStatus") == "clean"
+          )
+          output = Path(os.environ["GITHUB_OUTPUT"])
+          with output.open("a") as handle:
+              handle.write(f"already_published={'true' if exact else 'false'}\n")
+          PY
+
   dry-run:
     needs: validate
     if: github.event_name == 'pull_request'
@@ -74,7 +109,7 @@ jobs:
 
   publish:
     needs: validate
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    if: (github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')) && needs.validate.outputs.already_published != 'true'
     permissions:
       actions: read
       contents: read
