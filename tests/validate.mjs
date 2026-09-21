@@ -1981,6 +1981,33 @@ if (!mermailDefaultTriagerScenario || mermailDefaultTriagerScenario.tools.length
 }
 
 const allTools = Object.values(coverage.domains).flat();
+const updatedContracts = [
+  ["mermail-agent-wallet/references/workflows.md", ["credential_id", "approval_mode: autonomous", "setup_required", "pending_execution", "recovery_required", "paybox_get_request"]],
+  ["mermail-administer-workspace/references/ai-credits.md", ["observe", "enforce", "charged", "reserved", "remaining", "ai_credits_exhausted", "ai_credit_accounting_unavailable", "ai_action_in_progress"]],
+  ["mermail-support-agent/references/workflows.md", ["draft_for_review", "automatic_triage", "update_mailbox_settings", "verification-isolated"]],
+  ["mermail-manage-inbox/references/workflows.md", ["movedToTrashCount", "Trash"]],
+];
+for (const [relativePath, tokens] of updatedContracts) {
+  const document = await readFile(path.join(skillsRoot, relativePath), "utf8");
+  for (const token of tokens) {
+    if (!document.includes(token)) errors.push(`${relativePath}: missing ${token}`);
+  }
+}
+for (const expected of [
+  "preserve-explicit-chain-eligible-credential", "clarify-ambiguous-autonomous-credentials",
+  "autonomous-executes-within-user-task-and-grant", "preserve-original-setup-handoff-no-replacement",
+  "poll-original-execution-no-signing-or-resubmit", "preserve-original-invocation-and-recovery-path",
+  "admin-updates-mailbox-draft-policy", "admin-updates-mailbox-automatic-policy",
+  "reject-non-admin-settings-change", "keep-verification-automation-isolated",
+  "do-not-confuse-default-triager-with-mailbox-mode", "report-separate-ai-credit-accounting-and-mode",
+  "report-exhaustion-no-automatic-replay", "retain-reservation-and-original-idempotency",
+  "inspect-original-action-no-duplicate-generation-or-send", "stop-on-accounting-unavailable-no-bypass",
+  "confirm-trash-move-and-report-movedToTrashCount",
+]) {
+  if (!scenarios.some((scenario) => scenario.expected === expected)) {
+    errors.push(`missing release scenario ${expected}`);
+  }
+}
 const walletScopedTools = Object.values(walletScopedDomains).flat();
 const knownTools = [...allTools, ...walletScopedTools];
 const duplicates = knownTools.filter((tool, index) => knownTools.indexOf(tool) !== index);
