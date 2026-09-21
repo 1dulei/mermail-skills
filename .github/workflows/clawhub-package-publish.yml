@@ -69,6 +69,7 @@ jobs:
     with:
       dry_run: true
       owner: mermail
+      family: bundle-plugin
 
   publish:
     needs: validate
@@ -80,5 +81,6 @@ jobs:
     with:
       dry_run: false
       owner: mermail
+      family: bundle-plugin
     secrets:
       clawhub_token: ${{ secrets.CLAWHUB_TOKEN }}

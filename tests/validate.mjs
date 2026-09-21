@@ -952,7 +952,7 @@ for (const required of [
   "`x-api-key`",
   "full profile",
   "`agent-inbox`",
-  "72 tools",
+  "74 tools",
   "63-tool",
   "exactly 12 tools",
   "`initialize`",
@@ -1956,7 +1956,7 @@ for (const expected of [
   "route-manage-compose-composio-with-independent-authorization",
   "route-read-only-inbox-and-reject-wallet-switch",
   "route-research-business-to-mermail-research-agent",
-  "route-xstocks-desk-to-mermail-xstocks-desk",
+  "route-equity-workflow",
 ]) {
   if (!scenarios.some((scenario) => scenario.skill === "mermail" && scenario.expected === expected)) {
     errors.push(`mermail routing missing validation scenario ${expected}`);
@@ -1984,7 +1984,7 @@ const allTools = Object.values(coverage.domains).flat();
 const walletScopedTools = Object.values(walletScopedDomains).flat();
 const knownTools = [...allTools, ...walletScopedTools];
 const duplicates = knownTools.filter((tool, index) => knownTools.indexOf(tool) !== index);
-if (allTools.length !== 71) errors.push(`expected 71 business tools, found ${allTools.length}`);
+if (allTools.length !== 73) errors.push(`expected 73 business tools, found ${allTools.length}`);
 if (walletScopedTools.length !== 19) {
   errors.push(`expected 19 wallet-scoped Agent Wallet tool canaries, found ${walletScopedTools.length}`);
 }
@@ -2078,8 +2078,8 @@ async function validateRemote() {
   if (!initialized?.result?.serverInfo) errors.push("authenticated MCP initialize did not return serverInfo");
   const listed = await authenticatedMcpRequest(apiKey, { jsonrpc: "2.0", id: 2, method: "tools/list", params: {} });
   const remoteNames = (listed?.result?.tools ?? []).map((tool) => tool.name);
-  if (remoteNames.length !== 72) {
-    errors.push(`authenticated tools/list returned ${remoteNames.length} tools, expected 72`);
+  if (remoteNames.length !== 74) {
+    errors.push(`authenticated tools/list returned ${remoteNames.length} tools, expected 74`);
   }
   if (!remoteNames.includes(coverage.confirmationTool)) {
     errors.push(`authenticated tools/list missing ${coverage.confirmationTool}`);

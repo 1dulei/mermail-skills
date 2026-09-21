@@ -16,6 +16,8 @@
   ],
   "domains": {
     "mermail-administer-workspace": [
+      "get_ai_credit_usage",
+      "list_ai_credit_events",
       "get_api_credit_usage",
       "get_email_usage",
       "list_workspaces",
