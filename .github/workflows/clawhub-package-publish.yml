@@ -76,6 +76,7 @@ jobs:
           python3 - <<'PY'
           import json
           import os
+          import subprocess
           from pathlib import Path
 
           result = json.loads((Path(os.environ["RUNNER_TEMP"]) / "existing-package.json").read_text())
@@ -83,9 +84,27 @@ jobs:
           version = result.get("version") or {}
           verification = version.get("verification") or {}
           expected_version = json.loads(Path("package.json").read_text())["version"]
+          source_commit = verification.get("sourceCommit")
+          packaged_paths = [
+              "skills", "assets", "README.md", "LICENSE", "plugin.json", "mcp.json",
+              "openclaw.plugin.json", ".mcp.json", ".plugin", ".codex-plugin",
+              ".claude-plugin", ".cursor-plugin", "compatibility.json", "tool-coverage.json",
+          ]
+          source_compatible = source_commit == os.environ["EXPECTED_COMMIT"]
+          if source_commit and not source_compatible:
+              ancestor = subprocess.run(
+                  ["git", "merge-base", "--is-ancestor", source_commit, os.environ["EXPECTED_COMMIT"]],
+                  check=False,
+              ).returncode == 0
+              payload_unchanged = subprocess.run(
+                  ["git", "diff", "--quiet", source_commit, os.environ["EXPECTED_COMMIT"], "--", *packaged_paths],
+                  check=False,
+              ).returncode == 0
+              source_compatible = ancestor and payload_unchanged
           exact = (
               version.get("version") == expected_version
-              and verification.get("sourceCommit") == os.environ["EXPECTED_COMMIT"]
+              and verification.get("sourceRepo") == os.environ["GITHUB_REPOSITORY"]
+              and source_compatible
               and verification.get("scanStatus") == "clean"
               and package.get("scanStatus") == "clean"
           )
