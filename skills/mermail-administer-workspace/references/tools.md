@@ -2,7 +2,7 @@
 
 ## Usage and discovery
 
-- `get_api_credit_usage`, `get_email_usage`
+- `get_ai_credit_usage`, `list_ai_credit_events`, `get_api_credit_usage`, `get_email_usage`
 - `list_workspaces`, `get_workspace`, `get_workspace_storage`
 - `list_workspace_members`, `list_email_domains`
 - `list_workspace_mailboxes`, `list_mailboxes`, `get_mailbox`, `get_mailbox_storage`
